@@ -37,6 +37,8 @@ class RIPRouter (Entity):
 				self.send_packet(update, neighbor)
 
 	def send_packet(self, packet, dest):
+		if isinstance(dest, HostEntity) and isinstance(packet, RoutingUpdate):
+			return
 		self.send(packet, self.hand_off(dest))
 
 	def table(self):
