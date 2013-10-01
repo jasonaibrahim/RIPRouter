@@ -30,11 +30,6 @@ class RIPRouter (Entity):
 		for neighbor in self.routing_table.neighbors:
 			update = RoutingUpdate()
 			for dest in self.routing_table.destinations:
-				# if self.table()[dest].index(self.routing_table.minimum(self.table()[dest])) == self.routing_table.neighbors[neighbor]:
-				# if neighbor in self.table()[dest]:
-				# 	print("WOWOW")
-				# 	min_cost = float('inf')
-				# else:
 				min_cost = self.routing_table.minimum(self.table()[dest])
 				if dest != neighbor and min_cost != float('inf'):
 					update.add_destination(dest, min_cost)
