@@ -14,6 +14,7 @@ class RIPRouter (Entity):
 		init_helper()
 
 	def handle_rx (self, packet, port):
+		""" Deal with any type of packet that may come in on a port."""
 		try:
 			self.packet_actions[type(packet)](packet, port)
 		except KeyError:
@@ -27,6 +28,9 @@ class RIPRouter (Entity):
 		return self.routing_table.forwarding_port(dest)
 
 	def send_updates(self):
+		""" Send a neighbor-specific update to each neighbor. Updates 
+		are of the type RoutingUpdate and are specific to each neighbor
+		mainly for poison reverse."""
 		for neighbor in self.routing_table.neighbors:
 			update = RoutingUpdate()
 			for dest in self.routing_table.destinations:
@@ -37,14 +41,22 @@ class RIPRouter (Entity):
 				self.send_packet(update, neighbor)
 
 	def send_packet(self, packet, dest):
-		if isinstance(dest, HostEntity) and isinstance(packet, RoutingUpdate):
+		""" Send packet to destination. If the packet is only meant
+		for other routers, it is not sent to a host. """
+		not_for_dest = (isinstance(packet, RoutingUpdate) \
+		or isinstance(packet, DiscoveryPacket)) \
+		and isinstance(dest, HostEntity)
+		if not_for_dest:
 			return
 		self.send(packet, self.hand_off(dest))
 
 	def table(self):
+		""" Return the dictionary in self's RoutingTable."""
 		return self.routing_table.t
 
 	def discover(self, packet, port):
+		""" Upon receiving DiscoveryPacket, call routing table's
+		methods to establish new link in Routing Table."""
 		if packet.is_link_up:
 			self.routing_table.init_new_link(packet.src, port)
 		else:
@@ -52,11 +64,14 @@ class RIPRouter (Entity):
 		self.send_updates()
 
 	def update(self, packet, port):
+		""" Call routing table's update method to update table. Send updates.
+		If the table has converged, no further updates are sent."""
 		if self.routing_table.update(packet, port):
 			return
 		self.send_updates()
 
 	def forward(self, packet, port):
+		""" Send packet to packet's destination if destination reachable."""
 		try:
 			self.send_packet(packet, packet.dst)
 		except KeyError:
@@ -70,6 +85,9 @@ class RoutingTable(object):
 		self.destinations = []
 
 	def init_new_link(self, neighbor, port):
+		"""When a neighboring link goes up, add to destinations 
+		and neighbors, and add its port with cost to each destination 
+		as inf."""
 		self.add_destination(neighbor)
 		self.add_neighbor(neighbor, port)
 		for dest in self.t.keys():
@@ -80,11 +98,17 @@ class RoutingTable(object):
 					self.t[dest].insert(i, float('inf'))
 
 	def take_link_down(self, neighbor, port):
+		"""When a neighboring link goes down, we set the cost to get to 
+		each destination through that neighbor to nil, and delete neighbor
+		from dictionary."""
 		for dest in self.t.keys():
 			self.t[dest][port] = None
 		del self.neighbors[neighbor]
 
 	def update(self, packet, port):
+		"""Update the routing table upon receiving a RoutingUpdate packet.
+		Also decide whether or not the table has converged. Method returns
+		True is table has converged, False otherwise."""
 		paths = packet.paths
 		src = packet.src
 		convergence = False
@@ -110,11 +134,15 @@ class RoutingTable(object):
 		return convergence
 
 	def add_destination(self, dest):
+		"""Add a new destination to the routing table and set all initial
+		values of routing via each neighbor to inf."""
 		self.t[dest] = [float('inf') for i in range(self.owner.get_port_count())]
 		if dest not in self.destinations:
 			self.destinations.append(dest)
 
 	def add_neighbor(self, neighbor, port):
+		"""Add neighbor to routing table and set the cost to route
+		to it to the default one-hop cost."""
 		self.t[neighbor][port] = self.owner.default_cost
 		self.neighbors[neighbor] = port
 
@@ -124,6 +152,8 @@ class RoutingTable(object):
 		return self.t[dest].index(self.minimum(self.t[dest]))
 
 	def minimum(self, costs):
+		"""Given an array of costs, returns the minimum cost. Done this
+		way because cost array may contain nil values"""
 		min_val = float('inf')
 		for cost in costs:
 			if cost is None:
