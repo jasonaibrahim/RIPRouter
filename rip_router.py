@@ -33,19 +33,14 @@ class RIPRouter (Entity):
 		if not_for_dest:
 			return
 		link = self.routing_table.find_forwarding_port(dest)
-		self.send(packet, self.ports[link])
+		self.send(packet, self.ports[link][0])
 
 	def discover(self, packet, port):
 		""" Upon receiving DiscoveryPacket, call routing table's
 		methods to establish new link in Routing Table."""
-		# if packet.is_link_up:
-		# 	self.routing_table.init_new_link(packet.src, port)
-		# else:
-		# 	self.routing_table.take_link_down(packet.src, port)
-		# self.send_updates()
 		direct_link = packet.src
 		if packet.is_link_up:
-			self.ports[direct_link] = port
+			self.ports[direct_link] = (port,)
 			self.routing_table.link_up(direct_link)
 		else:
 			self.routing_table.link_down(packet)
@@ -56,12 +51,6 @@ class RIPRouter (Entity):
 	def update(self, packet, port):
 		""" Call routing table's update method to update table. Send updates.
 		If the table has converged, no further updates are sent."""
-		# if self.routing_table.update(packet, port):
-		# 	return
-		# self.send_updates()
-		# print(packet.paths)
-		# pass
-		# print(self, packet.src, packet.paths)
 		self.routing_table.update(packet)
 
 	def forward(self, packet, port):
@@ -88,10 +77,17 @@ class RoutingTable(object):
 		self.costs = {}
 		self.table = {}
 		self.best_costs = {}
+		self.previous_updates = {}
+
+	def add_neighbor(self, node):
+		self.neighbors.append(node) if node not in self.neighbors else None
+
+	def add_direct_link(self, node):
+		self.direct_links.append(node) if node is not self.owner else None
 
 	def link_up(self, node):
-		self.direct_links.append(node) if node is not self.owner else None
-		self.neighbors.append(node) if node not in self.neighbors else None
+		self.add_direct_link(node)
+		self.add_neighbor(node)
 		self.costs[node]= {}
 		self.costs[node][node], self.best_costs[node] = 1, 1
 		self.initialization()
@@ -117,31 +113,30 @@ class RoutingTable(object):
 			else:
 				self.best_costs[node] = float('inf')
 
-	def update(self, update=None, cost_change=False):
+	def update(self, update=None):
 		src = update.src
 		paths = update.paths
-		# if cost_change:
-		# 	for dest in paths:
-		# 		if dest is not self.owner:
-		# 			self.costs[src][dest] = float('inf')
-		# else:
 		for dest in paths:
 			if dest not in self.neighbors:
 				self.neighbors.append(dest)
 				self.best_costs[dest] = float('inf')
 				self.update(update)
-			# self.costs[src][dest] = 1 + paths[dest] 
+
+			try:
+				prev_cost = self.costs[src][dest]
+			except KeyError:
+				prev_cost = float('inf')
+
 			self.costs[src][dest] = self.costs[src][src] + paths[dest]
 
 			if self.costs[src][dest] < self.best_costs[dest]:
 				self.best_costs[dest] = self.costs[src][dest]
 				self.send_best_costs()
 			elif paths[dest] == float('inf'):
-				if self.costs[src][dest] == self.best_costs[dest]:
+				# Implicit withdrawals dealt with here.
+				if prev_cost == self.best_costs[dest]:
 					self.best_costs[dest] = float('inf')
 				del self.costs[src][dest]
-				self.update_best_costs()
-				# self.send_best_costs()
 
 	def find_forwarding_port(self, dest):
 		min_val = [float('inf'), None]
@@ -151,8 +146,6 @@ class RoutingTable(object):
 					if self.costs[link][dest] < min_val[0]:
 						min_val[0] = self.costs[link][dest]
 						min_val[1] = link
-		# if min_val[0] == float('inf'):
-		# 	self.update_best_costs()
 		return min_val[1]
 
 	def send_best_costs(self):
@@ -161,17 +154,14 @@ class RoutingTable(object):
 			for node in self.neighbors:
 				if node is not self.owner:
 					try:
+						# Poison reverse method implemented here.
 						if self.costs[link][node] == self.best_costs[node]:
-							# print(self.owner, link, node, "poison reverse")
+							# Poison Reverse
 							update.add_destination(node, float('inf'))
 						else:
 							update.add_destination(node, self.best_costs[node])
 					except KeyError:
 						update.add_destination(node, self.best_costs[node])
 						pass
-
-					# update.add_destination(node, self.best_costs[node])
-			# if pr:
-				# print(update.paths)
 			self.owner.send_packet(update, link)
 
