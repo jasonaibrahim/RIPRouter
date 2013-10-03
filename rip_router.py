@@ -137,6 +137,8 @@ class RoutingTable(object):
 				# Implicit withdrawals dealt with here.
 				if prev_cost == self.best_costs[dest]:
 					self.best_costs[dest] = float('inf')
+					# del self.costs[src][dest]
+					self.send_best_costs(True)
 
 	def find_forwarding_port(self, dest):
 		min_val = [float('inf'), None]
@@ -148,11 +150,12 @@ class RoutingTable(object):
 						min_val[1] = link
 		return min_val[1]
 
-	def send_best_costs(self):
+	def send_best_costs(self, withdrawn=False):
+		self.update_best_costs
 		for link in self.direct_links:
 			update = RoutingUpdate()
 			for node in self.neighbors:
-				if node is not self.owner:
+				if node is not self.owner and not withdrawn:
 					try:
 						# Poison reverse method implemented here.
 						if self.costs[link][node] == self.best_costs[node]:
@@ -162,6 +165,5 @@ class RoutingTable(object):
 							update.add_destination(node, self.best_costs[node])
 					except KeyError:
 						update.add_destination(node, self.best_costs[node])
-						pass
 			self.owner.send_packet(update, link)
 
