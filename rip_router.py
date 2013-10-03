@@ -11,6 +11,7 @@ class RIPRouter (Entity):
 			self.packet_actions[DiscoveryPacket] = self.discover
 		self.packet_actions = {}
 		self.routing_table = RoutingTable(self)
+		self.ports = {}
 		init_helper()
 
 	def handle_rx (self, packet, port):
@@ -23,23 +24,6 @@ class RIPRouter (Entity):
 			else:
 				print("Unknown packet.")
 
-	def hand_off(self, dest):
-		"""Return the minimum cost port to get to destination dest"""
-		return self.routing_table.forwarding_port(dest)
-
-	def send_updates(self):
-		""" Send a neighbor-specific update to each neighbor. Updates 
-		are of the type RoutingUpdate and are specific to each neighbor
-		mainly for poison reverse."""
-		for neighbor in self.routing_table.neighbors:
-			update = RoutingUpdate()
-			for dest in self.routing_table.destinations:
-				min_cost = self.routing_table.minimum(self.table()[dest])
-				if dest != neighbor and min_cost != float('inf'):
-					update.add_destination(dest, min_cost)
-			if update.paths:
-				self.send_packet(update, neighbor)
-
 	def send_packet(self, packet, dest):
 		""" Send packet to destination. If the packet is only meant
 		for other routers, it is not sent to a host. """
@@ -48,124 +32,136 @@ class RIPRouter (Entity):
 		and isinstance(dest, HostEntity)
 		if not_for_dest:
 			return
-		self.send(packet, self.hand_off(dest))
-
-	def table(self):
-		""" Return the dictionary in self's RoutingTable."""
-		return self.routing_table.t
+		link = self.routing_table.find_forwarding_port(dest)
+		self.send(packet, self.ports[link][0])
 
 	def discover(self, packet, port):
 		""" Upon receiving DiscoveryPacket, call routing table's
 		methods to establish new link in Routing Table."""
+		direct_link = packet.src
 		if packet.is_link_up:
-			self.routing_table.init_new_link(packet.src, port)
+			self.ports[direct_link] = (port,)
+			self.routing_table.link_up(direct_link)
 		else:
-			self.routing_table.take_link_down(packet.src, port)
-		self.send_updates()
+			self.routing_table.link_down(packet)
+		self.routing_table.update_best_costs()
+		self.routing_table.send_best_costs()
+
 
 	def update(self, packet, port):
 		""" Call routing table's update method to update table. Send updates.
 		If the table has converged, no further updates are sent."""
-		if self.routing_table.update(packet, port):
-			return
-		self.send_updates()
+		self.routing_table.update(packet)
 
 	def forward(self, packet, port):
 		""" Send packet to packet's destination if destination reachable."""
 		try:
 			self.send_packet(packet, packet.dst)
 		except KeyError:
-			return
+			print("Unknown destination. Retry.")
+			self.routing_table.send_best_costs()
+			# Below we deal with attempting to force send an unknown packet by linking
+			# to neighbors in order to find out more information about the destination
+			# being handed to us.
+			# try:
+			# 	for link in self.routing_table.direct_links:
+			# 		if isinstance(link, RIPRouter):
+			# 			self.linkTo(link)	
+			# except KeyError:
+			# 	return
 
 class RoutingTable(object):
 	def __init__(self, owner):
 		self.owner = owner
-		self.t = {}
-		self.neighbors = {}
-		self.destinations = []
+		self.direct_links = []
+		self.neighbors = []
+		self.costs = {}
+		self.table = {}
+		self.best_costs = {}
+		self.previous_updates = {}
 
-	def init_new_link(self, neighbor, port):
-		"""When a neighboring link goes up, add to destinations 
-		and neighbors, and add its port with cost to each destination 
-		as inf."""
-		self.add_destination(neighbor)
-		self.add_neighbor(neighbor, port)
-		for dest in self.t.keys():
-			for i in range(self.owner.get_port_count()):
-				try:
-					self.t[dest][i]
-				except IndexError:
-					self.t[dest].insert(i, float('inf'))
+	def add_neighbor(self, node):
+		self.neighbors.append(node) if node not in self.neighbors else None
 
-	def take_link_down(self, neighbor, port):
-		"""When a neighboring link goes down, we set the cost to get to 
-		each destination through that neighbor to nil, and delete neighbor
-		from dictionary."""
-		for dest in self.t.keys():
-			self.t[dest][port] = None
-		del self.neighbors[neighbor]
+	def add_direct_link(self, node):
+		self.direct_links.append(node) if node is not self.owner else None
 
-	def update(self, packet, port):
-		"""Update the routing table upon receiving a RoutingUpdate packet.
-		Also decide whether or not the table has converged. Method returns
-		True is table has converged, False otherwise."""
-		paths = packet.paths
-		src = packet.src
-		convergence = False
-		for path in paths:
-			if path not in self.destinations:
-				self.add_destination(path)
-		for dest in self.destinations:
-			if dest == src:
-				pass
-			elif dest not in paths:
-				self.t[dest][self.neighbors[src]] = float('inf')
-				convergence = False
+	def link_up(self, node):
+		self.add_direct_link(node)
+		self.add_neighbor(node)
+		self.costs[node]= {}
+		self.costs[node][node], self.best_costs[node] = 1, 1
+		self.initialization()
+
+	def link_down(self, packet):
+		node = packet.src
+		self.direct_links.pop(self.direct_links.index(node))
+		for dest in self.costs[node]:
+			if self.costs[node][dest] == self.best_costs[dest]:
+				self.best_costs[dest] = float('inf')
+			self.costs[node][dest] = float('inf')
+
+	def update_best_costs(self):
+		for link in self.costs:
+			for dest in self.costs[link]:
+				if self.costs[link][dest] < self.best_costs[dest]:
+					self.best_costs[dest] = self.costs[link][dest]
+
+	def initialization(self):
+		for node in self.neighbors:
+			if node in self.direct_links:
+				self.best_costs[node] = self.costs[node][node]
 			else:
-				if self.t[dest][self.neighbors[src]] == 1 + paths[dest]:
-					convergence = True 
-				else:
-					self.t[dest][self.neighbors[src]] = 1 + paths[dest]
-					convergence = False
-		for dest in src.routing_table.destinations:
-			if dest not in self.destinations:
-				self.add_destination(dest)
-				convergence = False
-		return convergence
+				self.best_costs[node] = float('inf')
 
-	def add_destination(self, dest):
-		"""Add a new destination to the routing table and set all initial
-		values of routing via each neighbor to inf."""
-		self.t[dest] = [float('inf') for i in range(self.owner.get_port_count())]
-		if dest not in self.destinations:
-			self.destinations.append(dest)
+	def update(self, update=None):
+		src = update.src
+		paths = update.paths
+		for dest in paths:
+			if dest not in self.neighbors:
+				self.neighbors.append(dest)
+				self.best_costs[dest] = float('inf')
+				self.update(update)
 
-	def add_neighbor(self, neighbor, port):
-		"""Add neighbor to routing table and set the cost to route
-		to it to the default one-hop cost."""
-		self.t[neighbor][port] = self.owner.default_cost
-		self.neighbors[neighbor] = port
+			try:
+				prev_cost = self.costs[src][dest]
+			except KeyError:
+				prev_cost = float('inf')
 
-	def forwarding_port(self, dest):
-		"""Return the port number associated with the minimum cost
-		path to dest"""
-		return self.t[dest].index(self.minimum(self.t[dest]))
+			self.costs[src][dest] = self.costs[src][src] + paths[dest]
 
-	def minimum(self, costs):
-		"""Given an array of costs, returns the minimum cost. Done this
-		way because cost array may contain nil values"""
-		min_val = float('inf')
-		for cost in costs:
-			if cost is None:
-				pass
-			elif cost < min_val:
-				min_val = cost
-		return min_val
+			if self.costs[src][dest] < self.best_costs[dest]:
+				self.best_costs[dest] = self.costs[src][dest]
+				self.send_best_costs()
+			elif paths[dest] == float('inf'):
+				# Implicit withdrawals dealt with here.
+				if prev_cost == self.best_costs[dest]:
+					self.best_costs[dest] = float('inf')
 
-	def __repr__(self):
-		s = "[ "
-		for dest in self.destinations:
-			s += "d: " + str(dest) + " -->" + str(self.t[dest]) + ", "
-		s += "]"
-		return s
+	def find_forwarding_port(self, dest):
+		min_val = [float('inf'), None]
+		for link in self.costs:
+			for path in self.costs[link]:
+				if path == dest:
+					if self.costs[link][dest] < min_val[0]:
+						min_val[0] = self.costs[link][dest]
+						min_val[1] = link
+		return min_val[1]
+
+	def send_best_costs(self):
+		for link in self.direct_links:
+			update = RoutingUpdate()
+			for node in self.neighbors:
+				if node is not self.owner:
+					try:
+						# Poison reverse method implemented here.
+						if self.costs[link][node] == self.best_costs[node]:
+							# Poison Reverse
+							update.add_destination(node, float('inf'))
+						else:
+							update.add_destination(node, self.best_costs[node])
+					except KeyError:
+						update.add_destination(node, self.best_costs[node])
+						pass
+			self.owner.send_packet(update, link)
 
