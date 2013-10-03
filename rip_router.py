@@ -59,6 +59,7 @@ class RIPRouter (Entity):
 			self.send_packet(packet, packet.dst)
 		except KeyError:
 			print("Unknown destination. Retry.")
+			self.routing_table.send_best_costs()
 			# Below we deal with attempting to force send an unknown packet by linking
 			# to neighbors in order to find out more information about the destination
 			# being handed to us.
@@ -136,7 +137,6 @@ class RoutingTable(object):
 				# Implicit withdrawals dealt with here.
 				if prev_cost == self.best_costs[dest]:
 					self.best_costs[dest] = float('inf')
-				del self.costs[src][dest]
 
 	def find_forwarding_port(self, dest):
 		min_val = [float('inf'), None]
