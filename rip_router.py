@@ -77,6 +77,7 @@ class RoutingTable(object):
 		if isinstance(node, RIPRouter):
 			self.best_ports = {}
 			self.best_costs = {}
+			self.new_min = False
 		else:
 			del self.best_costs[node]
 			del self.best_ports[node]
