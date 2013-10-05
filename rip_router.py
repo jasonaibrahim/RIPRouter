@@ -5,6 +5,7 @@ from sim.basics import *
 """
 class RIPRouter (Entity):
 	default_cost = 1
+	num_updates_sent = 0
 	def __init__(self):
 		def init_helper():
 			self.packet_actions[RoutingUpdate] = self.update
@@ -34,6 +35,9 @@ class RIPRouter (Entity):
 			return
 		link = self.routing_table.find_forwarding_port(dest)
 		self.send(packet, self.ports[link][0])
+
+		if isinstance(packet, RoutingUpdate):
+			RIPRouter.num_updates_sent += 1
 
 	def discover(self, packet, port):
 		""" Upon receiving DiscoveryPacket, call routing table's

@@ -2,6 +2,7 @@
 
 import sys
 import time
+import sim
 
 _ENABLE_GUI = "--gui" in sys.argv
 
@@ -10,8 +11,6 @@ _ENABLE_GUI = "--gui" in sys.argv
 # which displays logs itself.
 _DISABLE_CONSOLE_LOG = True
 
-
-# from hub import Hub as switch
 from rip_router import RIPRouter as switch
 
 import sim.core
@@ -19,10 +18,11 @@ import scenarios
 
 time.sleep(1) # Wait a sec for log client to maybe connect
 
-# import scenarios.linear as scenario
-import scenarios.candy as scenario
-# import scenarios.octagon as scenario
-scenario.create(switch_type = switch)
+import scenarios.octagon as scenario
+scenario.create(switch_type = switch, n = 50)
+
+# start()
+# s1.num_updates_sent
 
 # Import some stuff to use from the interpreter
 import sim.basics as basics

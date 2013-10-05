@@ -27,4 +27,6 @@
 	only two messages are sent to form tables - one to the master, and one
 	from the master to the router.
 
-4.
+4.	For extra credit, I analyzed the number of updates sent and I tried to
+	optimize how my routers were sending updates. I believe I came across
+	a solution that converges quickly and sends relatively few routing updates. This information is contained in the file AnalyzingUpdates.pdf. In that file is the array of the number of updates sent, as well as the plot of the updates vs the number of routers in the network. Also included in this tar is a run file that constructs the octagonal topology - this file is called analyze_updates.py.
