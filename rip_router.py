@@ -90,8 +90,9 @@ class RoutingTable(object):
 		for path in paths:
 			self.costs[src][path] = 1 + paths[path]
 		self.costs[src][src] = 1
-		self.update_best_costs()
+		# self.update_best_costs()
 		self.del_unknown_dests(src)
+		self.update_best_costs()
 		if self.new_min:
 			self.send_best_costs()
 		self.new_min = False
