@@ -5,7 +5,6 @@ from sim.basics import *
 """
 class RIPRouter (Entity):
 	default_cost = 1
-	num_updates_sent = 0
 	def __init__(self):
 		def init_helper():
 			self.packet_actions[RoutingUpdate] = self.update
@@ -36,9 +35,6 @@ class RIPRouter (Entity):
 		link = self.routing_table.find_forwarding_port(dest)
 		self.send(packet, self.ports[link][0])
 
-		if isinstance(packet, RoutingUpdate):
-			RIPRouter.num_updates_sent += 1
-
 	def discover(self, packet, port):
 		""" Upon receiving DiscoveryPacket, call routing table's
 		methods to establish new link in Routing Table."""
@@ -53,7 +49,8 @@ class RIPRouter (Entity):
 	def update(self, packet, port):
 		""" Call routing table's update method to update table. Send updates.
 		If the table has converged, no further updates are sent."""
-		self.routing_table.update(packet)
+		if isinstance(packet.src, RIPRouter):
+			self.routing_table.update(packet)
 
 	def forward(self, packet, port):
 		""" Send packet to packet's destination if destination reachable."""
@@ -81,7 +78,6 @@ class RoutingTable(object):
 		if isinstance(node, RIPRouter):
 			self.best_ports = {}
 			self.best_costs = {}
-			self.new_min = False
 		else:
 			del self.best_costs[node]
 			del self.best_ports[node]
