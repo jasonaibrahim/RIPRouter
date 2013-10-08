@@ -5,6 +5,7 @@ from sim.basics import *
 """
 class RIPRouter (Entity):
 	default_cost = 1
+	updates_sent = 0
 	def __init__(self):
 		def init_helper():
 			self.packet_actions[RoutingUpdate] = self.update
@@ -105,6 +106,8 @@ class RoutingTable(object):
 						self.best_costs[dest] = self.costs[link][dest]
 						self.best_ports[dest] = link
 						self.new_min = True
+					else:
+						self.new_min = False
 				except KeyError:
 					self.best_costs[dest] = self.costs[link][dest]
 					self.best_ports[dest] = link
@@ -132,6 +135,8 @@ class RoutingTable(object):
 				if not self.poison_reverse(dest, link) and link is not dest:
 					update.add_destination(dest, self.best_costs[dest])
 			self.owner.send_packet(update, link)
+
+		RIPRouter.updates_sent += 1
 
 	def poison_reverse(self, dest, link):
 		if dest == link:
