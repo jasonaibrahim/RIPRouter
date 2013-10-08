@@ -3,7 +3,7 @@ from sim.core import CreateEntity, topoOf
 from sim.basics import BasicHost
 from hub import Hub
 
-def create (switch_type = Hub, host_type = BasicHost, n =  50):
+def create (switch_type = Hub, host_type = BasicHost, n =  15):
     """
     Creates octagonal topology as in the extra credit.
     """
