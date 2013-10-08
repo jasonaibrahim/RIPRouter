@@ -3,7 +3,7 @@ from sim.core import CreateEntity, topoOf
 from sim.basics import BasicHost
 from hub import Hub
 
-def create (switch_type = Hub, host_type = BasicHost, n =  8):
+def create (switch_type = Hub, host_type = BasicHost, n =  50):
     """
     Creates octagonal topology as in the extra credit.
     """
@@ -12,8 +12,8 @@ def create (switch_type = Hub, host_type = BasicHost, n =  8):
     for i in range(1, n+1):
       s = switch_type.create('s' + str(i))
       switches.append(s)
-      # h = host_type.create('h' + str(i))
-      # s.linkTo(h)
+      h = host_type.create('h' + str(i))
+      s.linkTo(h)
 
     # Connect the switches
     prev = switches[0]

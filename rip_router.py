@@ -107,7 +107,8 @@ class RoutingTable(object):
 						self.best_ports[dest] = link
 						self.new_min = True
 					else:
-						self.new_min = False
+						# self.new_min = False
+						pass
 				except KeyError:
 					self.best_costs[dest] = self.costs[link][dest]
 					self.best_ports[dest] = link
