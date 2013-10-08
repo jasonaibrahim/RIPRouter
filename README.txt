@@ -29,4 +29,7 @@
 
 4.	For extra credit, I analyzed the number of updates sent and I tried to
 	optimize how my routers were sending updates. I believe I came across
-	a solution that converges quickly and sends relatively few routing updates. This information is contained in the file AnalyzingUpdates.pdf. In that file is the array of the number of updates sent, as well as the plot of the updates vs the number of routers in the network. Also included in this tar is a run file that constructs the octagonal topology - this file is called analyze_updates.py.
+	a solution that converges quickly and sends relatively few routing updates. This information is contained in the file AnalyzingUpdates.pdf. In that file is the array of the number of updates sent, as well as the plot of the updates vs the number of routers in the network. I found that the growth is quadratic as a function of the number of the routers in the network. While this may not be the kind of linear growth that is found in the ideal model of router networks, the solution I have implemented finds cheap routes reliably and with relatively little computational complexity. I believe my solution sends a small number of routing updates upon discovery, and even less once the table has converged for the first time.
+
+	I have included the scenario and the shell script I used to run my tests. The scenario can be found in scenarios/octagon.py and the shell script can be found
+	in the main project1 directory and is called analyze.sh. I have included all of these files.

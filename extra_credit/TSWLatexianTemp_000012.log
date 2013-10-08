@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2013.4.27)  8 OCT 2013 14:29
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2013.4.27)  8 OCT 2013 14:51
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**/Users/JAI/Dropbox/Fall13/EE122/project1/extra_credit/TSWLatexianTemp_000003.tex
-(/Users/JAI/Dropbox/Fall13/EE122/project1/extra_credit/TSWLatexianTemp_000003.tex
+**/Users/JAI/Dropbox/Fall13/EE122/project1/extra_credit/TSWLatexianTemp_000012.tex
+(/Users/JAI/Dropbox/Fall13/EE122/project1/extra_credit/TSWLatexianTemp_000012.tex
 LaTeX2e <2011/06/27>
 Babel <v3.8m> and hyphenation patterns for english, dumylang, nohyphenation, basque, danish, dutch, ukenglish, usenglishmax, finnish, french, german, ngerman, swissgerman, hungarian, italian, bokmal, nynorsk, polish, portuguese, spanish, swedish, loaded.
 (/usr/local/texlive/2012basic/texmf-dist/tex/latex/base/article.cls
@@ -47,8 +47,9 @@ Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 ))
 \Gin@req@height=\dimen103
 \Gin@req@width=\dimen104
-) (./TSWLatexianTemp_000003.aux)
-\openout1 = `TSWLatexianTemp_000003.aux'.
+)
+No file TSWLatexianTemp_000012.aux.
+\openout1 = `TSWLatexianTemp_000012.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 4.
 LaTeX Font Info:    ... okay on input line 4.
@@ -62,7 +63,7 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 4.
 LaTeX Font Info:    ... okay on input line 4.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 4.
 LaTeX Font Info:    ... okay on input line 4.
- (/usr/local/texlive/2012basic/texmf-dist/tex/context/base/supp-pdf.mkii
+(/usr/local/texlive/2012basic/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count88
 \scratchdimen=\dimen105
@@ -138,30 +139,30 @@ File: topo.png Graphic file (type png)
  <use topo.png>
 Package pdftex.def Info: topo.png used on input line 13.
 (pdftex.def)             Requested size: 284.52756pt x 153.29927pt.
- <plot.png, id=10, 1679.27374pt x 980.66376pt>
+ <plot.png, id=10, 561.09625pt x 420.57124pt>
 File: plot.png Graphic file (type png)
  <use plot.png>
-Package pdftex.def Info: plot.png used on input line 68.
-(pdftex.def)             Requested size: 369.88582pt x 216.00107pt.
+Package pdftex.def Info: plot.png used on input line 69.
+(pdftex.def)             Requested size: 369.88582pt x 277.24417pt.
 
-Overfull \hbox (24.88582pt too wide) in paragraph at lines 67--71
+Overfull \hbox (24.88582pt too wide) in paragraph at lines 68--72
  [] 
  []
 
-[2 <./topo.png> <./plot.png (PNG copy)>] (./TSWLatexianTemp_000003.aux) ) 
+[2 <./topo.png>] [3 <./plot.png (PNG copy)>] (./TSWLatexianTemp_000012.aux) ) 
 Here is how much of TeX's memory you used:
- 1490 strings out of 494578
- 21939 string characters out of 3168574
+ 1488 strings out of 494578
+ 21885 string characters out of 3168574
  73656 words of memory out of 3000000
  4723 multiletter control sequences out of 15000+200000
  6675 words of font info for 24 fonts, out of 3000000 for 9000
  314 hyphenation exceptions out of 8191
- 37i,6n,23p,361b,195s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 37i,6n,23p,384b,195s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/local/texlive/2012basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2012basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2012basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-Output written on TSWLatexianTemp_000003.pdf (2 pages, 79489 bytes).
+Output written on TSWLatexianTemp_000012.pdf (3 pages, 72865 bytes).
 PDF statistics:
- 25 PDF objects out of 1000 (max. 8388607)
- 15 compressed objects within 1 object stream
+ 28 PDF objects out of 1000 (max. 8388607)
+ 17 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  11 words of extra memory for PDF output out of 10000 (max. 10000000)
 

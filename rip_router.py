@@ -69,12 +69,17 @@ class RoutingTable(object):
 		self.new_min = True
 
 	def link_up(self, node):
+		""" When a new link comes up, initialize a new entry in routing table.
+		and pass the buck to update_best_costs to get all of the best costs."""
 		self.costs[node]= {}
 		self.costs[node][node], self.best_costs[node] = 1, 1
 		self.best_ports[node] = node
 		self.update_best_costs()
 
 	def link_down(self, node):
+		""" When a link goes down, we should reset our best costs and
+		delete that nodes entry from our routing table. then pass the buck 
+		to update to recalculate the best costs."""
 		del self.costs[node]
 		if isinstance(node, RIPRouter):
 			self.best_ports = {}
@@ -99,6 +104,8 @@ class RoutingTable(object):
 		self.new_min = False
 
 	def update_best_costs(self):
+		""" To update all of the best_costs we have in order to know
+		what our shortest paths are."""
 		for link in self.costs:
 			for dest in self.costs[link]:
 				try:
@@ -106,15 +113,14 @@ class RoutingTable(object):
 						self.best_costs[dest] = self.costs[link][dest]
 						self.best_ports[dest] = link
 						self.new_min = True
-					else:
-						# self.new_min = False
-						pass
 				except KeyError:
 					self.best_costs[dest] = self.costs[link][dest]
 					self.best_ports[dest] = link
 					self.new_min = True
 
 	def del_unknown_dests(self, src, path=None):
+		""" To delete any destinations we may have heard from a neighbor in a previous
+		update, but did not hear in the current update."""
 		for dest in self.best_costs.copy():
 			try:
 				if dest not in self.costs[src].keys() and self.best_ports[dest] == src:
