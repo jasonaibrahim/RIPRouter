@@ -6,6 +6,7 @@ from sim.basics import *
 class RIPRouter (Entity):
 	default_cost = 1
 	updates_sent = 0
+	max_hop_count = 100
 	def __init__(self):
 		def init_helper():
 			self.packet_actions[RoutingUpdate] = self.update
@@ -93,6 +94,9 @@ class RoutingTable(object):
 		"""Receive update packet from direct link neighbor."""
 		src = update.src
 		paths = update.paths
+		for path in paths:
+			if paths[path] >= RIPRouter.max_hop_count:
+				del paths[path]
 		self.costs[src] = paths
 		for path in paths:
 			self.costs[src][path] = 1 + paths[path]
