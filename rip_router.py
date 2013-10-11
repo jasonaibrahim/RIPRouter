@@ -51,7 +51,7 @@ class RIPRouter (Entity):
 	def update(self, packet, port):
 		""" Call routing table's update method to update table. Send updates.
 		If the table has converged, no further updates are sent."""
-		if isinstance(packet.src, RIPRouter):
+		if isinstance(packet.src, Entity):
 			self.routing_table.update(packet)
 
 	def forward(self, packet, port):
