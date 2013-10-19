@@ -94,7 +94,7 @@ class RoutingTable(object):
 		"""Receive update packet from direct link neighbor."""
 		src = update.src
 		paths = update.paths
-		for path in paths:
+		for path in paths.copy():
 			if paths[path] >= RIPRouter.max_hop_count:
 				del paths[path]
 		self.costs[src] = paths
