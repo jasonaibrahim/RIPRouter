@@ -1,6 +1,5 @@
 from sim.api import *
 from sim.basics import *
-
 """Create your RIP router in this file.
 """
 class RIPRouter (Entity):
@@ -45,6 +44,7 @@ class RIPRouter (Entity):
 			self.ports[direct_link] = (port,)
 			self.routing_table.link_up(direct_link)
 		else:
+			del self.ports[direct_link]
 			self.routing_table.link_down(direct_link)
 		self.routing_table.send_best_costs()
 
@@ -99,7 +99,7 @@ class RoutingTable(object):
 				del paths[path]
 		self.costs[src] = paths
 		for path in paths:
-			self.costs[src][path] = 1 + paths[path]
+			self.costs[src][path] = self.best_costs[src] + paths[path]
 		self.costs[src][src] = 1
 		self.del_unknown_dests(src)
 		self.update_best_costs()
@@ -137,6 +137,16 @@ class RoutingTable(object):
 				self.update_best_costs()
 
 	def find_forwarding_port(self, dest):
+		links = []
+		for neighbor in self.costs.keys():
+			try:
+				if self.costs[neighbor][dest] == self.best_costs[dest]:
+					links.append(neighbor)
+			except KeyError:
+				return self.best_ports[dest]
+		for neighbor in links:
+			if self.owner.ports[neighbor][0] < self.owner.ports[self.best_ports[dest]][0]:
+				self.best_ports[dest] = neighbor
 		return self.best_ports[dest]
 
 	def send_best_costs(self):
