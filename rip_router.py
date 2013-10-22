@@ -137,16 +137,6 @@ class RoutingTable(object):
 				self.update_best_costs()
 
 	def find_forwarding_port(self, dest):
-		links = []
-		for neighbor in self.costs.keys():
-			try:
-				if self.costs[neighbor][dest] == self.best_costs[dest]:
-					links.append(neighbor)
-			except KeyError:
-				return self.best_ports[dest]
-		for neighbor in links:
-			if self.owner.ports[neighbor][0] < self.owner.ports[self.best_ports[dest]][0]:
-				self.best_ports[dest] = neighbor
 		return self.best_ports[dest]
 
 	def send_best_costs(self):
